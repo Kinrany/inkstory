@@ -1,8 +1,8 @@
-/// Request and parse a story about archaeology students by Fantom_18.
+//! Request and parse a story about archaeology students by Fantom_18.
+
 use anyhow::Error;
 use fehler::throws;
 use instory::{Diagram, Response as InstoryResponse};
-use ureq;
 
 #[throws()]
 fn main() {

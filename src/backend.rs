@@ -1,4 +1,5 @@
-/// Instory backend response types.
+//! Instory backend response types.
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
