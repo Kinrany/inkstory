@@ -1,8 +1,8 @@
 //! Request and parse a story about archaeology students by Fantom_18.
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use fehler::throws;
-use instory::{Diagram, Response as InstoryResponse};
+use instory::{generate_story, Diagram, Response as InstoryResponse};
 
 #[throws()]
 fn main() {
@@ -11,5 +11,8 @@ fn main() {
       .call()?
       .into_json()?;
 
-  println!("{:?}", instory);
+  let diagram = instory.data;
+  let story = generate_story(&diagram).map_err(|_| anyhow!("failed to generate"))?;
+
+  println!("{}", story);
 }

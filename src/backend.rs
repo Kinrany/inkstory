@@ -1,18 +1,27 @@
 //! Instory backend response types.
 
+use std::{collections::HashMap, fmt::Display};
+
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct StoryId(u32);
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct NodeId(Uuid);
 
-#[derive(Deserialize, Debug, Serialize)]
+impl Display for NodeId {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let s = str::replace(&self.0.to_string(), "-", "_");
+    write!(f, "{}", s)
+  }
+}
+
+#[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct PortId(Uuid);
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize)]
 pub struct EdgeId(Uuid);
 
 #[derive(Deserialize, Debug, Serialize)]
@@ -44,14 +53,14 @@ pub struct Attachment;
 #[derive(Deserialize, Debug, Serialize)]
 pub struct Group;
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct Asset {
   pub id: Uuid,
   pub url: String,
 }
 
 #[non_exhaustive]
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 pub enum PortType {
   #[serde(rename = "out")]
   Out,
@@ -59,7 +68,7 @@ pub enum PortType {
   In,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct Port {
   pub id: PortId,
   pub name: String,
@@ -69,7 +78,7 @@ pub struct Port {
   pub node_id: NodeId,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct NodeContext {
   pub text: String,
   pub timeout: u32,
@@ -79,16 +88,16 @@ pub struct NodeContext {
   pub timeout_port_id: String,
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Debug, Eq, PartialEq, Serialize)]
 #[serde(tag = "type")]
 pub enum NodeKind {
   #[serde(rename = "start")]
-  Start {},
+  Start,
   #[serde(rename = "text-choice")]
   TextChoice { context: Option<NodeContext> },
 }
 
-#[derive(Deserialize, Debug, Serialize)]
+#[derive(Deserialize, Clone, Debug, Serialize)]
 pub struct Node {
   pub id: NodeId,
   #[serde(flatten)]
@@ -123,11 +132,54 @@ pub struct Diagram {
   pub groups: Vec<Group>,
 }
 
+impl Diagram {
+  pub fn choices<'a>(&self, node: &'a Node) -> Vec<(&'a String, &Node)> {
+    // collect pairs (outgoing port, choice option text)
+    let outgoing_port_ids = node
+      .ports
+      .iter()
+      .filter_map(|port| match port.r#type {
+        PortType::In => None,
+        // port.name contains the text displayed for the choice option
+        PortType::Out => Some((port.id, &port.name)),
+      })
+      .collect::<HashMap<_, _>>();
+
+    // follow the edges to replace outgoing ports with incoming ports
+    let incoming_port_ids = self
+      .edges
+      .iter()
+      .filter_map(|edge| {
+        outgoing_port_ids
+          .get(&edge.source_id)
+          .map(|&choice_option_text| (edge.target_id, choice_option_text))
+      })
+      .collect::<HashMap<_, _>>();
+
+    self
+      .nodes
+      .iter()
+      .map(|node| {
+        node
+          .ports
+          .iter()
+          .filter_map(|port| {
+            incoming_port_ids
+              .get(&port.id)
+              .map(|&choice_option_text| (choice_option_text, node))
+          })
+          .collect::<Vec<_>>()
+      })
+      .flatten()
+      .collect()
+  }
+}
+
 #[derive(Deserialize, Debug, Serialize)]
 // #[serde(untagged)]
 #[non_exhaustive]
 pub struct Response<T> {
-  // Success { status: bool, data: T },
+  // should be an enum with Success { status: bool, data: T },
   status: bool,
-  data: T,
+  pub data: T,
 }
