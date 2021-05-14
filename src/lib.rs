@@ -113,19 +113,27 @@ impl FromStr for StoryLocator {
 #[derive(StructOpt)]
 pub struct Inkstory {
   story_locator: StoryLocator,
+  #[structopt(long, name = "Replace \"rn\" with newline")]
+  fix_rn: bool,
 }
 
 impl Inkstory {
   pub fn new(locator: &str) -> Result<Self> {
     let inkstory = Inkstory {
       story_locator: locator.parse()?,
+      fix_rn: false,
     };
     Ok(inkstory)
   }
 
   pub fn exec(&self) -> Result<()> {
     let diagram = self.story_locator.get()?;
-    let story = instory_to_ink(&diagram)?;
+    let mut story = instory_to_ink(&diagram)?;
+    if self.fix_rn {
+      story.knots.iter_mut().for_each(|knot| {
+        knot.text = knot.text.replace("rn", "\n");
+      });
+    }
     print!("{}", story);
     Ok(())
   }
