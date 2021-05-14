@@ -2,7 +2,7 @@
 
 use anyhow::{anyhow, Error};
 use fehler::throws;
-use instory::{generate_story, Diagram, Response as InstoryResponse};
+use instory::{instory_to_ink, Diagram, Response as InstoryResponse};
 
 #[throws()]
 fn main() {
@@ -12,7 +12,7 @@ fn main() {
       .into_json()?;
 
   let diagram = instory.data;
-  let story = generate_story(&diagram).map_err(|_| anyhow!("failed to generate"))?;
+  let story = instory_to_ink(&diagram).map_err(|_| anyhow!("failed to generate"))?;
 
   println!("{}", story);
 }

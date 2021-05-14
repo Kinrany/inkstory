@@ -1,68 +1,17 @@
-pub mod backend;
+pub mod ink;
+pub mod instory;
 
-pub use backend::{Diagram, Response};
-use backend::{Node, NodeKind};
-use std::{error::Error, fmt::Display};
-
-#[derive(Clone, Debug)]
-struct KnotName(String);
-
-impl<T> From<T> for KnotName
-where
-  T: Into<String>,
-{
-  fn from(name: T) -> Self {
-    KnotName(name.into())
-  }
-}
-
-impl Display for KnotName {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.0)
-  }
-}
-
-struct Knot {
-  name: KnotName,
-  text: String,
-  choices: Vec<(String, KnotName)>,
-}
-
-impl Display for Knot {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    writeln!(f, "=== {} ===", self.name)?;
-    writeln!(f, "{}", self.text)?;
-    self
-      .choices
-      .iter()
-      .map(|(name, text)| writeln!(f, "+ [{}] -> {}", name, text))
-      .collect::<Result<Vec<_>, _>>()?;
-    Ok(())
-  }
-}
-
-pub struct Story {
-  start: KnotName,
-  knots: Vec<Knot>,
-}
-
-impl Display for Story {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    writeln!(f, "-> {}", self.start)?;
-    self
-      .knots
-      .iter()
-      .map(|knot| writeln!(f, "{}", knot))
-      .collect::<Result<Vec<_>, _>>()?;
-    Ok(())
-  }
-}
+pub use ink::Story;
+use ink::{Knot, KnotName};
+pub use instory::{Diagram, Response};
+use instory::{Node, NodeKind};
+use std::error::Error;
 
 fn temp_knot_name(node: &Node) -> KnotName {
   format!("knot_{}", node.id).into()
 }
 
-pub fn generate_story(diagram: &Diagram) -> Result<Story, Box<dyn Error>> {
+pub fn instory_to_ink(diagram: &Diagram) -> Result<Story, Box<dyn Error>> {
   let start_node = diagram
     .nodes
     .iter()
