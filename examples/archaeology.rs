@@ -2,7 +2,7 @@
 
 use anyhow::{anyhow, Error};
 use fehler::throws;
-use instory::{instory_to_ink, Diagram, Response as InstoryResponse};
+use inkstory::{instory_to_ink, Diagram, Response as InstoryResponse};
 
 #[throws()]
 fn main() {
