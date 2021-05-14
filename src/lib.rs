@@ -1,13 +1,14 @@
 pub mod ink;
 pub mod instory;
 
+use anyhow::{anyhow, bail, Error, Result};
 pub use ink::Story;
 use ink::{Knot, KnotName};
 pub use instory::{Diagram, Response};
 use instory::{Node, NodeKind};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{error::Error, fs, path::PathBuf, str::FromStr};
+use std::{fs, path::PathBuf, result::Result as StdResult, str::FromStr};
 use structopt::StructOpt;
 use url::Url;
 
@@ -15,16 +16,16 @@ fn temp_knot_name(node: &Node) -> KnotName {
   format!("knot_{}", node.id).into()
 }
 
-pub fn instory_to_ink(diagram: &Diagram) -> Result<Story, Box<dyn Error>> {
+pub fn instory_to_ink(diagram: &Diagram) -> Result<Story> {
   let start_node = diagram
     .nodes
     .iter()
     .find(|node| node.kind == NodeKind::Start)
-    .ok_or("no start node")?;
+    .ok_or_else(|| anyhow!("no start node"))?;
   let first_node = diagram
     .choices(start_node)
     .first()
-    .ok_or("start node has no child nodes")?
+    .ok_or_else(|| anyhow!("start node has no child nodes"))?
     .1;
 
   let start_knot_name: KnotName = temp_knot_name(&first_node);
@@ -61,8 +62,8 @@ enum StoryLocator {
 }
 
 impl StoryLocator {
-  fn get(&self) -> Result<Diagram, Box<dyn Error>> {
-    fn download(url: &Url) -> Result<String, Box<dyn Error>> {
+  fn get(&self) -> Result<Diagram> {
+    fn download(url: &Url) -> Result<String> {
       Ok(ureq::get(&url.to_string()).call()?.into_string()?)
     }
 
@@ -90,9 +91,9 @@ impl StoryLocator {
 }
 
 impl FromStr for StoryLocator {
-  type Err = Box<dyn Error>;
+  type Err = Error;
 
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
+  fn from_str(s: &str) -> StdResult<Self, Self::Err> {
     if let Ok(id) = s.parse() {
       return Ok(StoryLocator::Id(id));
     }
@@ -105,7 +106,7 @@ impl FromStr for StoryLocator {
       return Ok(StoryLocator::File(path));
     }
 
-    Err("Must be a story URL, a file path, or a story ID.".into())
+    bail!("Must be a story URL, a file path, or a story ID.")
   }
 }
 
@@ -115,7 +116,14 @@ pub struct Inkstory {
 }
 
 impl Inkstory {
-  pub fn exec(&self) -> Result<(), Box<dyn Error>> {
+  pub fn new(locator: &str) -> Result<Self> {
+    let inkstory = Inkstory {
+      story_locator: locator.parse()?,
+    };
+    Ok(inkstory)
+  }
+
+  pub fn exec(&self) -> Result<()> {
     let diagram = self.story_locator.get()?;
     let story = instory_to_ink(&diagram)?;
     print!("{}", story);

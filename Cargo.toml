@@ -7,6 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.40"
 itertools = "0.10.0"
 lazy_static = "1.4.0"
 paw = "1.0.0"
@@ -17,7 +18,3 @@ structopt = { version = "0.3.21", features = ["paw"] }
 ureq = { version = "2.1.0", features = ["json"] }
 url = { version = "2.2.2", features = ["serde"] }
 uuid = { version = "0.8.2", features = ["serde"] }
-
-[dev-dependencies]
-anyhow = "1.0.40"
-fehler = "1.0.0"
