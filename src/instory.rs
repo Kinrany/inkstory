@@ -1,8 +1,8 @@
 //! Instory backend response types.
 
-use std::{collections::HashMap, fmt::Display};
-
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, fmt::Display};
+use url::Url;
 use uuid::Uuid;
 
 #[derive(Deserialize, Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize)]
@@ -182,4 +182,10 @@ pub struct Response<T> {
   // should be an enum with Success { status: bool, data: T },
   status: bool,
   pub data: T,
+}
+
+pub fn diagram_url_from_id(id: u32) -> Url {
+  format!("https://api.instory.su/api/stories/{}/diagram", id)
+    .parse()
+    .unwrap()
 }
