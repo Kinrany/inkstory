@@ -2,7 +2,6 @@ pub mod backend;
 
 pub use backend::{Diagram, Response};
 use backend::{Node, NodeKind};
-use itertools::Itertools;
 use std::{error::Error, fmt::Display};
 
 #[derive(Clone, Debug)]
@@ -42,11 +41,28 @@ impl Display for Knot {
   }
 }
 
+pub struct Story {
+  start: KnotName,
+  knots: Vec<Knot>,
+}
+
+impl Display for Story {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    writeln!(f, "-> {}", self.start)?;
+    self
+      .knots
+      .iter()
+      .map(|knot| writeln!(f, "{}", knot))
+      .collect::<Result<Vec<_>, _>>()?;
+    Ok(())
+  }
+}
+
 fn temp_knot_name(node: &Node) -> KnotName {
   format!("knot_{}", node.id).into()
 }
 
-pub fn generate_story(diagram: &Diagram) -> Result<String, Box<dyn Error>> {
+pub fn generate_story(diagram: &Diagram) -> Result<Story, Box<dyn Error>> {
   let start_node = diagram
     .nodes
     .iter()
@@ -77,14 +93,10 @@ pub fn generate_story(diagram: &Diagram) -> Result<String, Box<dyn Error>> {
       }),
       _ => None,
     })
-    .map(|knot| knot.to_string());
+    .collect();
 
-  let story_start = format!("-> {}", start_knot_name);
-  let story = vec![story_start]
-    .into_iter()
-    // TODO: make cleaner by implementing chain_back
-    // so that the arguments are reversed.
-    .chain(knots)
-    .join("\n");
-  Ok(story)
+  Ok(Story {
+    start: start_knot_name,
+    knots,
+  })
 }
