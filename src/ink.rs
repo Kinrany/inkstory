@@ -28,11 +28,15 @@ impl Display for Knot {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     writeln!(f, "=== {} ===", self.name)?;
     writeln!(f, "{}", self.text)?;
-    self
-      .choices
-      .iter()
-      .map(|(name, text)| writeln!(f, "+ [{}] -> {}", name, text))
-      .collect::<Result<Vec<_>, _>>()?;
+    if !self.choices.is_empty() {
+      self
+        .choices
+        .iter()
+        .map(|(name, text)| writeln!(f, "+ [{}] -> {}", name, text))
+        .collect::<Result<Vec<_>, _>>()?;
+    } else {
+      writeln!(f, "-> END")?;
+    }
     Ok(())
   }
 }
