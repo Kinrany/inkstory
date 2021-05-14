@@ -113,7 +113,7 @@ impl FromStr for StoryLocator {
 #[derive(StructOpt)]
 pub struct Inkstory {
   story_locator: StoryLocator,
-  #[structopt(long, name = "Replace \"rn\" with newline")]
+  #[structopt(long, help = "Replaces \"rn\" with newline")]
   fix_rn: bool,
 }
 
