@@ -73,7 +73,7 @@ pub struct Port {
   pub id: PortId,
   pub name: String,
   pub r#type: PortType,
-  pub position: u32,
+  pub position: Option<u32>,
   #[serde(rename = "nodeId")]
   pub node_id: NodeId,
 }
