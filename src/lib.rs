@@ -12,6 +12,7 @@ use std::{fs, path::PathBuf, result::Result as StdResult, str::FromStr};
 use structopt::StructOpt;
 use url::Url;
 
+/// Deterministically generates a knot name based on an instory node
 fn temp_knot_name(node: &Node) -> KnotName {
   format!("knot_{}", node.id).into()
 }
@@ -33,18 +34,23 @@ pub fn instory_to_ink(diagram: &Diagram) -> Result<Story> {
     .nodes
     .iter()
     .filter_map(|node| match &node.kind {
-      NodeKind::TextChoice { context } => Some(Knot {
-        name: temp_knot_name(node),
-        text: context
-          .clone()
-          .expect("context is never empty for text nodes")
-          .text,
-        choices: diagram
-          .choices(node)
-          .iter()
-          .map(|(choice_option_text, node)| (choice_option_text.to_string(), temp_knot_name(node)))
-          .collect(),
-      }),
+      NodeKind::TextChoice { context } => {
+        let knot = Knot {
+          text: context
+            .clone()
+            .expect("context is never empty for text nodes")
+            .text,
+          choices: diagram
+            .choices(node)
+            .iter()
+            .map(|(choice_option_text, choice_node)| {
+              (choice_option_text.to_string(), temp_knot_name(choice_node))
+            })
+            .collect(),
+        };
+        let name = temp_knot_name(node);
+        Some((name, knot))
+      }
       _ => None,
     })
     .collect();
@@ -130,7 +136,7 @@ impl Inkstory {
     let diagram = self.story_locator.get()?;
     let mut story = instory_to_ink(&diagram)?;
     if self.fix_rn {
-      story.knots.iter_mut().for_each(|knot| {
+      story.knots.iter_mut().for_each(|(_, knot)| {
         knot.text = knot.text.replace("rn", "\n");
       });
     }
