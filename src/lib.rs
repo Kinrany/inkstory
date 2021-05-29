@@ -6,15 +6,45 @@ pub use ink::Story;
 use ink::{Knot, KnotName};
 pub use instory::{Diagram, Response};
 use instory::{Node, NodeKind};
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{fs, path::PathBuf, result::Result as StdResult, str::FromStr};
 use structopt::StructOpt;
 use url::Url;
 
-/// Deterministically generates a knot name based on an instory node
+/// Creates a closure that will count characters in the passed strings
+/// and return `false` once the total count reaches `n`.
+fn char_count_less_than(n: usize) -> impl FnMut(&String) -> bool {
+  let mut count = 0;
+  move |s: &String| {
+    count += s.chars().count();
+    count < n
+  }
+}
+
+/// Deterministically generates knot name based on an instory node
 fn temp_knot_name(node: &Node) -> KnotName {
-  format!("knot_{}", node.id).into()
+  match &node.kind {
+    NodeKind::Start => "start".into(),
+    NodeKind::TextChoice { context } => {
+      let knot_name = context
+        .clone()
+        .expect("Text node with no context")
+        .text
+        .split(|ch: char| ch.is_whitespace() || ch.is_ascii_punctuation())
+        .filter(|s| !s.is_empty())
+        .map(|s| {
+          s.chars()
+            .filter(|ch| ch.is_alphanumeric())
+            .collect::<String>()
+        })
+        .take_while(char_count_less_than(30))
+        .join("_");
+      let id = node.id.to_string().chars().take(6).collect::<String>();
+      format!("{}_{}", knot_name, id).into()
+    }
+  }
 }
 
 pub fn instory_to_ink(diagram: &Diagram) -> Result<Story> {
