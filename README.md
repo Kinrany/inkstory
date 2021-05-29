@@ -18,3 +18,5 @@ inkstory ./story.json > story.ink
 # With a story ID
 inkstory 12345 > story.ink
 ```
+
+Option `--fix-rn` replaces all occurences of the two letters "rn" with newlines.
