@@ -159,7 +159,7 @@ impl Diagram {
     self
       .nodes
       .iter()
-      .map(|node| {
+      .flat_map(|node| {
         node
           .ports
           .iter()
@@ -170,7 +170,6 @@ impl Diagram {
           })
           .collect::<Vec<_>>()
       })
-      .flatten()
       .collect()
   }
 }

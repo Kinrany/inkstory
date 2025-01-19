@@ -1,7 +1,7 @@
 pub mod ink;
 pub mod instory;
 
-use anyhow::{anyhow, bail, Error, Result};
+use anyhow::{anyhow, Error, Result};
 pub use ink::Story;
 use ink::{Knot, KnotName};
 pub use instory::{Diagram, Response};
@@ -9,7 +9,7 @@ use instory::{Node, NodeKind};
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{fs, path::PathBuf, result::Result as StdResult, str::FromStr};
+use std::{fs, path::PathBuf, str::FromStr};
 use structopt::StructOpt;
 use url::Url;
 
@@ -59,7 +59,7 @@ pub fn instory_to_ink(diagram: &Diagram) -> Result<Story> {
     .ok_or_else(|| anyhow!("start node has no child nodes"))?
     .1;
 
-  let start_knot_name: KnotName = temp_knot_name(&first_node);
+  let start_knot_name: KnotName = temp_knot_name(first_node);
   let knots = diagram
     .nodes
     .iter()
@@ -100,7 +100,7 @@ enum StoryLocator {
 impl StoryLocator {
   fn get(&self) -> Result<Diagram> {
     fn download(url: &Url) -> Result<String> {
-      Ok(ureq::get(&url.to_string()).call()?.into_string()?)
+      Ok(ureq::get(url.as_ref()).call()?.into_string()?)
     }
 
     let json = match self {
@@ -129,7 +129,7 @@ impl StoryLocator {
 impl FromStr for StoryLocator {
   type Err = Error;
 
-  fn from_str(s: &str) -> StdResult<Self, Self::Err> {
+  fn from_str(s: &str) -> Result<Self> {
     if let Ok(id) = s.parse() {
       return Ok(StoryLocator::Id(id));
     }
@@ -138,11 +138,7 @@ impl FromStr for StoryLocator {
       return Ok(StoryLocator::Url(url));
     }
 
-    if let Ok(path) = s.parse() {
-      return Ok(StoryLocator::File(path));
-    }
-
-    bail!("Must be a story URL, a file path, or a story ID.")
+    Ok(StoryLocator::File(PathBuf::from(s)))
   }
 }
 

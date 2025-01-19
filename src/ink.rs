@@ -66,7 +66,7 @@ impl Display for Story {
       if unreached_knots.remove(&name) {
         // Write the knot, add choices to the knot queue
         writeln!(f, "=== {} ===", name)?;
-        if let Some(knot) = self.knots.get(&name) {
+        if let Some(knot) = self.knots.get(name) {
           writeln!(f, "{}", knot)?;
           for (_, choice) in &knot.choices {
             queue.push_back(choice);
@@ -82,7 +82,7 @@ impl Display for Story {
       writeln!(f, "// Some knots are unreachable:")?;
       for name in unreached_knots {
         writeln!(f, "=== {} ===", name)?;
-        if let Some(knot) = self.knots.get(&name) {
+        if let Some(knot) = self.knots.get(name) {
           writeln!(f, "{}", knot)?;
         } else {
           writeln!(f, "// knot not found")?;
