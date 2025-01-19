@@ -1,15 +1,13 @@
 [package]
 name = "inkstory"
 version = "0.2.0"
-authors = ["Ruslan Fadeev <kinrany@yandex.com>"]
-edition = "2018"
+authors = ["Ruslan Fadeev <github@kinrany.dev>"]
+edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Convert interactive stories between Instory and Ink formats"
 homepage = "https://github.com/kinrany/inkstory"
 repository = "https://github.com/kinrany/inkstory"
 documentation = "https://docs.rs/inkstory"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.40"
